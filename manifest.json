@@ -1,6 +1,6 @@
 {
   "name": "Chrome Logger",
-  "description": "",
+  "description": "Logs console messages",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
   "background": {
@@ -8,9 +8,14 @@
   },
   "version": "1.0",
   "manifest_version": 3,
-
   "action": {
     "default_popup": "logger.html",
     "default_icon": "Spaceship.png"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["logger.js"]
+    }
+  ]
 }

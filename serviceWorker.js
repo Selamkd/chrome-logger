@@ -5,14 +5,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       logs.push({
         level: message.level,
         text: message.text,
-        time: new Date().toLocalTimeString(),
+        time: new Date().toLocaleTimeString(),
       });
 
-      chrome.storage.locals.set({ logs }, () => {
-        sendResponse({ status: "saved" });
-      });
+      chrome.storage.local.set({ logs });
     });
-
-    return true;
   }
 });
