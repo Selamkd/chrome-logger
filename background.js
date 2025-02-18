@@ -1,4 +1,6 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Received message:", message);
+
   if (message.type === "log") {
     chrome.storage.local.get({ logs: [] }, (data) => {
       const logs = data.logs;
