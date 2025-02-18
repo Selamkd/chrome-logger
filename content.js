@@ -6,3 +6,13 @@
   };
   document.documentElement.appendChild(script);
 })();
+
+window.addEventListener("message", (event) => {
+  if (event.source !== window || event.data.type !== "console_log") return;
+
+  chrome.runtime.sendMessage({
+    type: "log",
+    level: event.data.level,
+    message: event.data.message,
+  });
+});

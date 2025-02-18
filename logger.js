@@ -3,32 +3,39 @@ if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
     const logContainer = document.getElementById("log-container");
     const clearButton = document.getElementById("clear-logs");
 
-    function loadLogs() {
-      if (chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get({ logs: [] }, (data) => {
-          logContainer.innerHTML = "";
-          if (data.logs && Array.isArray(data.logs)) {
-            data.logs.forEach((log) => {
-              const logEntry = document.createElement("div");
-              logEntry.className = `log ${log.level}`;
-              logEntry.textContent = `[${log.time}] ${log.level.toUpperCase()}: ${log.text}`;
-              logContainer.appendChild(logEntry);
-            });
-          }
-        });
-      }
-    }
-
-    if (clearButton) {
-      clearButton.addEventListener("click", () => {
-        if (chrome.storage && chrome.storage.local) {
-          chrome.storage.local.set({ logs: [] }, loadLogs);
-        }
+    function displayLogs(logs) {
+      logContainer.innerHTML = "";
+      logs.forEach((log) => {
+        const logDiv = document.createElement("div");
+        logDiv.className = `log ${log.level}`;
+        logDiv.innerHTML = `<strong>[${log.level.toUpperCase()}]</strong> ${log.text} <em>(${log.time})</em>`;
+        logContainer.appendChild(logDiv);
       });
     }
 
-    loadLogs();
-    setInterval(loadLogs, 1000);
+    chrome.storage.local.get("logs", (data) => {
+      if (data.logs) {
+        displayLogs(data.logs);
+      }
+    });
+
+    if (clearButton) {
+      clearButton.addEventListener("click", () => {
+        chrome.storage.local.set({ logs: [] }, () => {
+          displayLogs([]);
+        });
+      });
+    }
+  });
+
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === "update_logs") {
+      chrome.storage.local.get("logs", (data) => {
+        if (data.logs) {
+          displayLogs(data.logs);
+        }
+      });
+    }
   });
 } else {
   console.error(
