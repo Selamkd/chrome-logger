@@ -1,44 +1,34 @@
-if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
-  document.addEventListener("DOMContentLoaded", () => {
-    const logContainer = document.getElementById("log-container");
-    const clearButton = document.getElementById("clear-logs");
+document.addEventListener("DOMContentLoaded", () => {
+  const logContainer = document.getElementById("log-container");
+  const clearBtn = document.getElementById("clear-logs");
 
-    function displayLogs(logs) {
-      logContainer.innerHTML = "";
-      logs.forEach((log) => {
-        const logDiv = document.createElement("div");
-        logDiv.className = `log ${log.level}`;
-        logDiv.innerHTML = `<strong>[${log.level.toUpperCase()}]</strong> ${log.text} <em>(${log.time})</em>`;
-        logContainer.appendChild(logDiv);
-      });
-    }
-
-    chrome.storage.local.get("logs", (data) => {
-      if (data.logs) {
-        displayLogs(data.logs);
-      }
+  function displayLogs(logs) {
+    logContainer.innerHTML = "";
+    logs.forEach((log) => {
+      const logEntry = document.createElement("div");
+      logEntry.className = "log-entry";
+      logEntry.innerHTML = `
+        <div class="timestamp">${new Date(log.timestamp).toLocaleTimeString()}</div>
+        <div class="message">${log.message}</div>
+        <div class="url">${log.url}</div>
+      `;
+      logContainer.appendChild(logEntry);
     });
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
 
-    if (clearButton) {
-      clearButton.addEventListener("click", () => {
-        chrome.storage.local.set({ logs: [] }, () => {
-          displayLogs([]);
-        });
-      });
-    }
+  chrome.runtime.sendMessage({ type: "GET_LOGS" }, (logs) => {
+    displayLogs(logs || []);
   });
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "update_logs") {
-      chrome.storage.local.get("logs", (data) => {
-        if (data.logs) {
-          displayLogs(data.logs);
-        }
-      });
+    if (message.type === "NEW_LOG") {
+      displayLogs(message.logs);
     }
   });
-} else {
-  console.error(
-    "chrome.storage is not available. Make sure the script is running in a Chrome extension.",
-  );
-}
+
+  clearBtn.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ type: "CLEAR_LOGS" });
+    logContainer.innerHTML = "";
+  });
+});

@@ -1,16 +1,16 @@
 let logs = [];
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Received message:", message);
-
-  if (message.type === "log") {
+  console.log("Sent response-----", sendResponse);
+  if (message.type === "LOG") {
     logs.push({
-      level: message.level,
-      text: message.message.join(" "),
-      time: new Date().toLocaleTimeString(),
-      url: sender.tab ? sender.tab.url : "??",
+      timestamp: new Date().toISOString(),
+      message: message.content,
+      url: sender.tab.url,
     });
-
-    chrome.storage.local.set({ logs });
-    chrome.runtime.sendMessage({ type: "update_logs", logs });
+  } else if (message.type === "GET_LOGS") {
+    sendResponse(logs);
   }
+
+  return true;
 });

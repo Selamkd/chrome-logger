@@ -1,3 +1,4 @@
+border-radius: 4px;
 body {
     font-family: "Courier New", Courier, monospace;
     padding: 20px;
@@ -6,11 +7,7 @@ body {
     color: #d4d4d4;
 }
 
-h3 {
-    color: #a3b3c2;
-    text-transform: uppercase;
-    font-size: 1.1rem;
-    border-bottom: 1px solid #3a3f4b;
+ncnc]]]
     padding-bottom: 5px;
 }
 
@@ -28,7 +25,6 @@ h3 {
 .log {
     padding: 6px;
     margin: 4px 0;
-    border-radius: 4px;
     font-weight: normal;
     font-family: "Courier New", Courier, monospace;
 }
@@ -71,8 +67,6 @@ button:hover {
 ::-webkit-scrollbar-thumb {
     background: #3a3f4b;
     border-radius: 3px;
-}
-
 ::-webkit-scrollbar-track {
     background: #1c1c1c;
 }
