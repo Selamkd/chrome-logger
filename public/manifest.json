@@ -6,7 +6,8 @@
 
 
   "permissions": [
-    "webRequest"
+    "activeTab"
+
   ],
 
   "_comment_webRequest": "Permission to view network requests",
@@ -18,17 +19,16 @@
 
   "_comment_background": "Background service worker captures network requests",
   "background": {
-    "service_worker": "src/background/index.js",
+  "service_worker": "background.js",
     "type": "module"
   },
 
   "_comment_content_scripts": "Inject scripts and styles into every page after HTML loads",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content/index.js"],
-      "css": ["src/content/index.css"],
-      "run_at": "document_end"
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "css": ["content.css"]
     }
   ],
 
@@ -39,6 +39,7 @@
       "matches": ["<all_urls>"]
     }
   ],
+
 
   "icons": {
     "16": "icons/icon16.png",
