@@ -9,57 +9,47 @@ const script = document.createElement('script')
 script.src = chrome.runtime.getURL('content/inject.js')
 script.onload = () => console.log('inject.js script tag loaded!')
 script.onerror = (e) => console.error('Failed to load inject.js:', e)
+
 ;(document.head || document.documentElement).appendChild(script)
+
 if (!document.getElementById('chrome-logger-root')) {
 
-  const container = document.createElement('div')
-  container.id = 'chrome-logger-root'
-  document.body.appendChild(container)
-  
-  const shadowRoot = container.attachShadow({ mode: 'open' })
-  
-
-  const appContainer = document.createElement('div')
-  appContainer.id = 'chrome-logger-app'
-  shadowRoot.appendChild(appContainer)
-  
- 
   const styleSheet = document.createElement('style')
+  styleSheet.id = 'chrome-logger-styles'
   styleSheet.textContent = `
-    /* Base reset for our container */
-    #chrome-logger-app {
-      all: initial;
-      position: fixed;
-      top: 0;
-      right: 0;
-      height: 100vh;
-      z-index: 2147483647; /* Max z-index to stay on top */
+    #chrome-logger-root {
+      position: fixed !important;
+      top: 0 !important;
+      right: 0 !important;
+      width: 432px !important;
+      height: 100vh !important;
+      z-index: 2147483647 !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 12px;
       line-height: 1.4;
+      pointer-events: none;
     }
     
-    #chrome-logger-app * {
+    #chrome-logger-root * {
       box-sizing: border-box;
     }
     
-    /* Scrollbar styles */
-    #chrome-logger-app ::-webkit-scrollbar {
+    #chrome-logger-root ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     
-    #chrome-logger-app ::-webkit-scrollbar-track {
+    #chrome-logger-root ::-webkit-scrollbar-track {
       background: #1e1e1e;
     }
     
-    #chrome-logger-app ::-webkit-scrollbar-thumb {
+    #chrome-logger-root ::-webkit-scrollbar-thumb {
       background: #4a4a4a;
       border-radius: 3px;
     }
     
-    /* Panel container */
     .logger-panel {
+      position: relative;
       width: 400px;
       height: 100vh;
       background: #1e1e1e;
@@ -68,13 +58,13 @@ if (!document.getElementById('chrome-logger-root')) {
       flex-direction: column;
       color: #d4d4d4;
       transition: transform 0.3s ease;
+      pointer-events: auto;
     }
     
     .logger-panel.collapsed {
-      transform: translateX(360px);
+      transform: translateX(100%);
     }
     
-    /* Header */
     .logger-header {
       display: flex;
       justify-content: space-between;
@@ -97,7 +87,6 @@ if (!document.getElementById('chrome-logger-root')) {
       align-items: center;
     }
     
-    /* Buttons */
     .btn {
       padding: 4px 8px;
       border: none;
@@ -130,13 +119,13 @@ if (!document.getElementById('chrome-logger-root')) {
       justify-content: center;
       color: #d4d4d4;
       font-size: 16px;
+      pointer-events: auto;
     }
     
     .btn-toggle:hover {
       background: #3c3c3c;
     }
     
-    /* Tabs */
     .tabs {
       display: flex;
       background: #252526;
@@ -171,7 +160,6 @@ if (!document.getElementById('chrome-logger-root')) {
       margin-left: 4px;
     }
     
-    /* Filters */
     .filters {
       display: flex;
       align-items: center;
@@ -226,13 +214,11 @@ if (!document.getElementById('chrome-logger-root')) {
       color: #fff;
     }
     
-    /* Content area */
     .content {
       flex: 1;
       overflow: auto;
     }
     
-    /* Network table */
     .request-list {
       width: 100%;
     }
@@ -252,7 +238,6 @@ if (!document.getElementById('chrome-logger-root')) {
       background: #2a2d2e;
     }
     
-    /* Status badge */
     .status {
       padding: 2px 6px;
       border-radius: 3px;
@@ -266,7 +251,6 @@ if (!document.getElementById('chrome-logger-root')) {
     .status-error { background: #4a2e2e; color: #cf6c6c; }
     .status-pending { background: #3c3c3c; color: #969696; }
     
-    /* Method colors */
     .method { font-weight: 600; font-size: 10px; }
     .method-get { color: #6ccf6c; }
     .method-post { color: #cfcf6c; }
@@ -292,7 +276,6 @@ if (!document.getElementById('chrome-logger-root')) {
       font-size: 10px;
     }
     
-    /* Console list */
     .console-item {
       display: flex;
       align-items: flex-start;
@@ -332,7 +315,6 @@ if (!document.getElementById('chrome-logger-root')) {
       font-size: 10px;
     }
     
-    /* Empty state */
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -342,10 +324,13 @@ if (!document.getElementById('chrome-logger-root')) {
       color: #666;
     }
   `
-  shadowRoot.appendChild(styleSheet)
-  
+  document.head.appendChild(styleSheet)  // Append to HEAD
 
-  const root = ReactDOM.createRoot(appContainer)
+  const container = document.createElement('div')
+  container.id = 'chrome-logger-root'
+  document.body.appendChild(container)
+
+  const root = ReactDOM.createRoot(container)
   root.render(
     React.createElement(
       React.StrictMode,

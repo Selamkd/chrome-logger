@@ -22,28 +22,37 @@ function LoggerPanel() {
 
 
 useEffect(() => {
-  const handleMessage = (event: MessageEvent) => {
+  console.log('LoggerPanel mounted, listening for messages')
+  
+  const handleWindowMessage = (event: MessageEvent) => {
     if (event.data?.source !== 'chrome-logger-extension') return
     
     const message = event.data
-    if (message.type === 'NETWORK_REQUEST') {
-      setNetworkRequests(prev => [...prev, message.payload as INetworkRequest])
-    }
     if (message.type === 'CONSOLE_LOG') {
+      console.log('Received CONSOLE_LOG:', message)
       setConsoleLogs(prev => [...prev, {
         ...message.payload,
         timestamp: new Date(message.payload.timestamp)
       } as IConsoleLog])
     }
   }
+  
+ 
+  const handleChromeMessage = (message: { type: string; payload: INetworkRequest }) => {
+    if (message.type === 'NETWORK_REQUEST') {
+      console.log('Received NETWORK_REQUEST:', message)
+      setNetworkRequests(prev => [...prev, message.payload])
+    }
+  }
 
-  window.addEventListener('message', handleMessage)
-  return () => window.removeEventListener('message', handleMessage)
+  window.addEventListener('message', handleWindowMessage)
+  chrome.runtime.onMessage.addListener(handleChromeMessage)
+  
+  return () => {
+    window.removeEventListener('message', handleWindowMessage)
+    chrome.runtime.onMessage.removeListener(handleChromeMessage)
+  }
 }, [])
-
-
-
-
 
 
   const clearLogs = useCallback(() => {
@@ -136,6 +145,14 @@ useEffect(() => {
 
 
       <div className="tabs">
+
+            <button 
+          className={`tab ${activeTab === 'console' ? 'active' : ''}`}
+          onClick={() => setActiveTab('console')}
+        >
+          Console
+          <span className="badge">{consoleLogs.length}</span>
+        </button>
         <button 
           className={`tab ${activeTab === 'network' ? 'active' : ''}`}
           onClick={() => setActiveTab('network')}
@@ -143,13 +160,7 @@ useEffect(() => {
           Network
           <span className="badge">{networkRequests.length}</span>
         </button>
-        <button 
-          className={`tab ${activeTab === 'console' ? 'active' : ''}`}
-          onClick={() => setActiveTab('console')}
-        >
-          Console
-          <span className="badge">{consoleLogs.length}</span>
-        </button>
+    
       </div>
 
       <div className="filters">
@@ -216,7 +227,7 @@ useEffect(() => {
           </div>
         ) : (
           <div className="console-list">
-            {filteredConsoleLogs.length === 0 ? (
+            {consoleLogs.length === 0 ? (
               <div className="empty-state">
                 <div>No console messages captured</div>
               </div>
