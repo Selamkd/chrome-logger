@@ -146,7 +146,7 @@ function LoggerPanel() {
       </button>
 
       <div className="logger-header">
-        <h1>Chrome Logger</h1>
+        <h1>Chrome Logger(Test config)</h1>
         <div className="header-controls">
           <button className="btn" onClick={clearLogs}>
             Clear
