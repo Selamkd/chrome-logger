@@ -5,7 +5,7 @@ import type {
   IMessageResponse,
   IPingResponse,
   ITabInfoResponse,
-} from "../shared/messages";
+} from "../shared/const";
 
 export function App(): React.ReactElement {
   const [status, setStatus] = useState<string>("Ready");

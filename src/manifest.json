@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Chrome Extension Starter",
+  "name": "Chrome Logger",
   "version": "1.0.0",
-  "description": "A template Chrome extension with React, TypeScript, and Tailwind CSS",
+  "description": "View console logs and network requests in a sidebar panel",
 
-  "permissions": ["storage", "activeTab"],
-
+  "permissions": ["storage", "activeTab", "webRequest"],
+ "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background/index.js",
     "type": "module"
@@ -15,7 +17,8 @@
     {
       "matches": ["<all_urls>"],
       "js": ["content/index.js"],
-      "css": ["content/styles.css"]
+      "css": ["content/styles.css"],
+       "run_at": "document_end"
     }
   ],
 

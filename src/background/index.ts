@@ -1,103 +1,167 @@
 import type {
-  IExtensionMessage,
-  IMessageResponse,
-  IPingResponse,
-  ITabInfoResponse,
-  IContentLoadedResponse,
-} from "../shared/messages";
 
-/**
- * Background Service Worker
- *
- * runs in an isolated context(has no DOM access)
- * acts as the central message hub between the view(popup,panel), content scripts,
- * and can respond to browser events (tabs, alarms, etc.).
- *
- * Manifest V3 quirk: Service workers are non-persistent.
- * They can be terminated when idle(avoid storing state in variables)
- * Use chrome.storage for any data that needs to persist.
- */
+  INetworkRequest,
 
-console.log("[Background] Service worker init...");
+} from "../shared/const";
 
-chrome.runtime.onInstalled.addListener((details) => {
-  console.log("[Background Service] Extension installed:", details.reason);
-});
+// track requests per tab
+const requestsPerTab: Map<number, Map<string, Partial<INetworkRequest>>> = new Map()
 
-/**
- * Central message handler.
- * All messages from popup and content scripts arrive here.
- */
-chrome.runtime.onMessage.addListener(
-  (
-    message: IExtensionMessage,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response: IMessageResponse) => void
-  ): boolean => {
-    console.log("[Background] Received message:", message.type, "from:", sender);
-
-    handleMessage(message, sender)
-      .then(sendResponse)
-      .catch((error) => {
-        console.error("[Background] Error handling message:", error);
-        sendResponse({ success: false, error: error.message });
-      });
-
-    /**
-     * Returning true signals that sendResponse will be called asynchronously.
-     * Without this, the message channel closes immediately.
-     */
-    return true;
-  }
-);
-
-async function handleMessage(
-  message: IExtensionMessage,
-  sender: chrome.runtime.MessageSender
-): Promise<IMessageResponse> {
-  switch (message.type) {
-    case "PING": {
-      const response: IPingResponse = {
-        success: true,
-        message: "Background service worker is listening!",
-        timestamp: Date.now(),
-      };
-      return response;
-    }
-
-    case "GET_TAB_INFO": {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      const tab = tabs[0];
-
-      const response: ITabInfoResponse = {
-        success: true,
-        url: tab?.url ?? "Unknown",
-        title: tab?.title ?? "Unknown",
-      };
-      return response;
-    }
-
-    case "CONTENT_LOADED": {
-      console.log(
-        "[Background] Content script loaded on:",
-        message.payload.url
-      );
-
-      const response: IContentLoadedResponse = {
-        success: true,
-        received: true,
-      };
-      return response;
-    }
-
-    default: {
-    
-      throw new Error(`Unhandled message type`);
-    }
-  }
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-console.log("[Background] Service worker listening for messages.");
+function getResourceType(url: string, type?: string): string {
+  if (type === 'xmlhttprequest') return 'xhr'
+  if (type === 'fetch') return 'fetch'
+  
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase()
+  const typeMap: Record<string, string> = {
+    'js': 'js',
+    'css': 'css',
+    'png': 'img',
+    'jpg': 'img',
+    'jpeg': 'img',
+    'gif': 'img',
+    'svg': 'img',
+    'webp': 'img',
+    'html': 'doc',
+    'htm': 'doc',
+    'json': 'json',
+    'woff': 'font',
+    'woff2': 'font',
+    'ttf': 'font',
+  }
+  
+  return typeMap[ext || ''] || type || 'other'
+}
+
+
+function initTab(tabId: number): Map<string, Partial<INetworkRequest>> {
+  if (!requestsPerTab.has(tabId)) {
+    requestsPerTab.set(tabId, new Map())
+  }
+  return requestsPerTab.get(tabId)!
+}
+
+chrome.webRequest.onBeforeRequest.addListener(
+  (details) => {
+   
+    if (details.tabId < 0) return
+    
+    const tabRequests = initTab(details.tabId)
+    const id = generateId()
+    
+
+    tabRequests.set(details.requestId, {
+      id,
+      url: details.url,
+      method: details.method,
+      type: getResourceType(details.url, details.type),
+      timestamp: new Date(),
+      status: null,
+      statusText: '',
+      size: 0,
+      time: 0,
+    })
+  },
+  { urls: ['<all_urls>'] }
+)
+
+
+
+chrome.webRequest.onHeadersReceived.addListener(
+  (details) => {
+    if (details.tabId < 0) return
+    
+    const tabRequests = requestsPerTab.get(details.tabId)
+    const request = tabRequests?.get(details.requestId)
+    
+    if (request) {
+      request.status = details.statusCode
+      request.statusText = details.statusLine || ''
+      
+    
+      if (details.responseHeaders) {
+        request.responseHeaders = {}
+        details.responseHeaders.forEach(header => {
+          request.responseHeaders![header.name.toLowerCase()] = header.value || ''
+        })
+        
+      
+        const contentLength = details.responseHeaders.find(
+          h => h.name.toLowerCase() === 'content-length'
+        )
+        if (contentLength?.value) {
+          request.size = parseInt(contentLength.value, 10)
+        }
+      }
+    }
+  },
+  { urls: ['<all_urls>'] },
+  ['responseHeaders'] 
+)
+
+chrome.webRequest.onCompleted.addListener(
+  (details) => {
+    if (details.tabId < 0) return
+    
+    const tabRequests = requestsPerTab.get(details.tabId)
+    const request = tabRequests?.get(details.requestId)
+    
+    if (request && request.timestamp) {
+   
+      request.time = Date.now() - request.timestamp.getTime()
+      
+    
+      chrome.tabs.sendMessage(details.tabId, {
+        type: 'NETWORK_REQUEST',
+        payload: { ...request } as INetworkRequest
+      }).catch(() => {
+     
+      })
+      
+  
+      tabRequests?.delete(details.requestId)
+    }
+  },
+  { urls: ['<all_urls>'] }
+)
+
+chrome.webRequest.onErrorOccurred.addListener(
+  (details) => {
+    if (details.tabId < 0) return
+    
+    const tabRequests = requestsPerTab.get(details.tabId)
+    const request = tabRequests?.get(details.requestId)
+    
+    if (request && request.timestamp) {
+      request.time = Date.now() - request.timestamp.getTime()
+      request.status = 0 
+      request.statusText = details.error
+      
+      chrome.tabs.sendMessage(details.tabId, {
+        type: 'NETWORK_REQUEST',
+        payload: { ...request } as INetworkRequest
+      }).catch(() => {})
+      
+      tabRequests?.delete(details.requestId)
+    }
+  },
+  { urls: ['<all_urls>'] }
+)
+
+
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  requestsPerTab.delete(tabId)
+})
+
+
+chrome.webNavigation?.onBeforeNavigate?.addListener((details) => {
+  if (details.frameId === 0) {
+    requestsPerTab.delete(details.tabId)
+  }
+})
+
+console.log('Chrome Logger background script loaded')

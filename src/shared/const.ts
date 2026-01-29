@@ -3,7 +3,6 @@
  * 
  */
 
-export type IMessageType = "PING" | "GET_TAB_INFO" | "CONTENT_LOADED";
 
 interface IBaseMessage {
   type: IMessageType;
@@ -55,3 +54,37 @@ export type IMessageResponse =
   | ITabInfoResponse
   | IContentLoadedResponse
   | { success: false; error: string };
+
+
+  
+export interface INetworkRequest {
+  id: string
+  url: string
+  method: string
+  status: number | null
+  statusText: string
+  type: string
+  size: number
+  time: number
+  timestamp: Date
+  requestHeaders?: Record<string, string>
+  responseHeaders?: Record<string, string>
+  requestBody?: string
+  responseBody?: string
+}
+
+
+export interface IConsoleLog {
+  id: string
+  type: 'log' | 'warn' | 'error' | 'info'
+  message: string
+  timestamp: Date
+  stack?: string
+}
+
+
+export type IMessageType = 
+ "PING" | "GET_TAB_INFO" | "CONTENT_LOADED" |
+   { type: 'NETWORK_REQUEST'; payload: INetworkRequest }
+  | { type: 'CONSOLE_LOG'; payload: IConsoleLog }
+  | { type: 'CLEAR_LOGS' }
