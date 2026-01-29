@@ -2,17 +2,24 @@
 # dependencies
 /node_modules
 
-# testing
-/coverage
-
-# production
-/build
-
-# zip
-/zip
-
-# misc
+# enviroments
 .env.local
 .env.dev.local
 .env.prod.local
+
+
+# build output
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+
+
+
+# logs
+*.log
+npm-debug.log*
+
 

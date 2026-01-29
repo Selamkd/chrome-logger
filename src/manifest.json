@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome Extension Starter",
+  "version": "1.0.0",
+  "description": "A template Chrome extension with React, TypeScript, and Tailwind CSS",
+
+  "permissions": ["storage", "activeTab"],
+
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/index.js"],
+      "css": ["content/styles.css"]
+    }
+  ],
+
+  "action": {
+    "default_popup": "view/index.html",
+    "default_title": "Chrome Extension Template",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    }
+  },
+
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  }
+}
