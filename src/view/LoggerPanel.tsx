@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { INetworkRequest, IConsoleLog } from '../shared/const'
 
-
 const NETWORK_FILTERS = ['all', 'xhr', 'fetch', 'js', 'css', 'img', 'doc'] as const
 const CONSOLE_FILTERS = ['all', 'log', 'warn', 'error', 'info'] as const
 
@@ -10,75 +9,88 @@ type IConsoleFilter = typeof CONSOLE_FILTERS[number]
 type ITab = 'network' | 'console'
 
 function LoggerPanel() {
-
   const [networkRequests, setNetworkRequests] = useState<INetworkRequest[]>([])
   const [consoleLogs, setConsoleLogs] = useState<IConsoleLog[]>([])
-
   const [activeTab, setActiveTab] = useState<ITab>('network')
+  const [isVisible, setIsVisible] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
   const [textFilter, setTextFilter] = useState('')
   const [networkFilter, setNetworkFilter] = useState<INetworkFilter>('all')
   const [consoleFilter, setConsoleFilter] = useState<IConsoleFilter>('all')
 
-
-useEffect(() => {
-  console.log('LoggerPanel mounted, listening for messages')
   
-  const handleWindowMessage = (event: MessageEvent) => {
-    if (event.data?.source !== 'chrome-logger-extension') return
+  useEffect(() => {
+    chrome.storage.local.get(['loggerEnabled', 'activeTab'], (result) => {
+      if (result.loggerEnabled !== undefined) {
+        setIsVisible(result.loggerEnabled)
+      }
+      if (result.activeTab) {
+        setActiveTab(result.activeTab)
+      }
+    })
+  }, [])
+
+
+  useEffect(() => {
+    console.log('LoggerPanel mounted, listening for messages')
+
+    const handleWindowMessage = (event: MessageEvent) => {
+      if (event.data?.source !== 'chrome-logger-extension') return
+      
+      if (event.data.type === 'CONSOLE_LOG') {
+        console.log('Received CONSOLE_LOG:', event.data)
+        setConsoleLogs(prev => [...prev, {
+          ...event.data.payload,
+          timestamp: new Date(event.data.payload.timestamp)
+        } as IConsoleLog])
+      }
+    }
     
-    const message = event.data
-    if (message.type === 'CONSOLE_LOG') {
-      console.log('Received CONSOLE_LOG:', message)
-      setConsoleLogs(prev => [...prev, {
-        ...message.payload,
-        timestamp: new Date(message.payload.timestamp)
-      } as IConsoleLog])
-    }
-  }
-  
- 
-  const handleChromeMessage = (message: { type: string; payload: INetworkRequest }) => {
-    if (message.type === 'NETWORK_REQUEST') {
-      console.log('Received NETWORK_REQUEST:', message)
-      setNetworkRequests(prev => [...prev, message.payload])
-    }
-  }
 
-  window.addEventListener('message', handleWindowMessage)
-  chrome.runtime.onMessage.addListener(handleChromeMessage)
-  
-  return () => {
-    window.removeEventListener('message', handleWindowMessage)
-    chrome.runtime.onMessage.removeListener(handleChromeMessage)
-  }
-}, [])
+    const handleChromeMessage = (message: { type: string; payload?: INetworkRequest; enabled?: boolean; tab?: ITab }) => {
+      console.log('Received chrome message:', message)
+      
+      if (message.type === 'NETWORK_REQUEST' && message.payload) {
+        setNetworkRequests(prev => [...prev, message.payload!])
+      }
+      if (message.type === 'TOGGLE_LOGGER') {
+        setIsVisible(message.enabled ?? true)
+      }
+      if (message.type === 'SWITCH_TAB' && message.tab) {
+        setActiveTab(message.tab)
+      }
+      if (message.type === 'CLEAR_LOGS') {
+        setNetworkRequests([])
+        setConsoleLogs([])
+      }
+    }
 
+    window.addEventListener('message', handleWindowMessage)
+    chrome.runtime.onMessage.addListener(handleChromeMessage)
+    
+    return () => {
+      window.removeEventListener('message', handleWindowMessage)
+      chrome.runtime.onMessage.removeListener(handleChromeMessage)
+    }
+  }, [])
 
   const clearLogs = useCallback(() => {
     setNetworkRequests([])
     setConsoleLogs([])
   }, [])
 
-
   const filteredNetworkRequests = networkRequests.filter(req => {
-
     if (networkFilter !== 'all' && req.type !== networkFilter) return false
-  
     if (textFilter && !req.url.toLowerCase().includes(textFilter.toLowerCase())) return false
     return true
   })
 
- 
   const filteredConsoleLogs = consoleLogs.filter(log => {
-
     if (consoleFilter !== 'all' && log.type !== consoleFilter) return false
- 
     if (textFilter && !log.message.toLowerCase().includes(textFilter.toLowerCase())) return false
     return true
   })
 
-  
   const formatTime = (ms: number): string => {
     if (ms < 1000) return `${Math.round(ms)}ms`
     return `${(ms / 1000).toFixed(2)}s`
@@ -93,7 +105,6 @@ useEffect(() => {
     })
   }
 
- 
   const getStatusClass = (status: number | null): string => {
     if (!status) return 'status-pending'
     if (status >= 200 && status < 300) return 'status-success'
@@ -101,7 +112,6 @@ useEffect(() => {
     return 'status-error'
   }
 
- 
   const getFileName = (url: string): string => {
     try {
       const urlObj = new URL(url)
@@ -112,7 +122,6 @@ useEffect(() => {
     }
   }
 
-
   const getConsoleIcon = (type: IConsoleLog['type']): string => {
     switch (type) {
       case 'warn': return '⚠'
@@ -122,9 +131,12 @@ useEffect(() => {
     }
   }
 
+  if (!isVisible) {
+    return null
+  }
+
   return (
     <div className={`logger-panel ${collapsed ? 'collapsed' : ''}`}>
- 
       <button 
         className="btn-toggle"
         onClick={() => setCollapsed(!collapsed)}
@@ -133,7 +145,6 @@ useEffect(() => {
         {collapsed ? '◀' : '▶'}
       </button>
 
- 
       <div className="logger-header">
         <h1>Chrome Logger</h1>
         <div className="header-controls">
@@ -143,16 +154,7 @@ useEffect(() => {
         </div>
       </div>
 
-
       <div className="tabs">
-
-            <button 
-          className={`tab ${activeTab === 'console' ? 'active' : ''}`}
-          onClick={() => setActiveTab('console')}
-        >
-          Console
-          <span className="badge">{consoleLogs.length}</span>
-        </button>
         <button 
           className={`tab ${activeTab === 'network' ? 'active' : ''}`}
           onClick={() => setActiveTab('network')}
@@ -160,7 +162,13 @@ useEffect(() => {
           Network
           <span className="badge">{networkRequests.length}</span>
         </button>
-    
+        <button 
+          className={`tab ${activeTab === 'console' ? 'active' : ''}`}
+          onClick={() => setActiveTab('console')}
+        >
+          Console
+          <span className="badge">{consoleLogs.length}</span>
+        </button>
       </div>
 
       <div className="filters">
@@ -199,7 +207,6 @@ useEffect(() => {
         )}
       </div>
 
-
       <div className="content">
         {activeTab === 'network' ? (
           <div className="request-list">
@@ -227,7 +234,7 @@ useEffect(() => {
           </div>
         ) : (
           <div className="console-list">
-            {consoleLogs.length === 0 ? (
+            {filteredConsoleLogs.length === 0 ? (
               <div className="empty-state">
                 <div>No console messages captured</div>
               </div>
