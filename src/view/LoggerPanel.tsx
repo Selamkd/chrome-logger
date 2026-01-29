@@ -21,84 +21,30 @@ function LoggerPanel() {
   const [consoleFilter, setConsoleFilter] = useState<IConsoleFilter>('all')
 
 
-  useEffect(() => {
-    const handleMessage = (message: { type: string; payload: INetworkRequest | IConsoleLog }) => {
-      if (message.type === 'NETWORK_REQUEST') {
-        setNetworkRequests(prev => [...prev, message.payload as INetworkRequest])
-      }
-    }
-
-   
-    chrome.runtime?.onMessage?.addListener(handleMessage)
+useEffect(() => {
+  const handleMessage = (event: MessageEvent) => {
+    if (event.data?.source !== 'chrome-logger-extension') return
     
-    return () => {
-      chrome.runtime?.onMessage?.removeListener(handleMessage)
+    const message = event.data
+    if (message.type === 'NETWORK_REQUEST') {
+      setNetworkRequests(prev => [...prev, message.payload as INetworkRequest])
     }
-  }, [])
+    if (message.type === 'CONSOLE_LOG') {
+      setConsoleLogs(prev => [...prev, {
+        ...message.payload,
+        timestamp: new Date(message.payload.timestamp)
+      } as IConsoleLog])
+    }
+  }
 
-  useEffect(() => {
-    const originalConsole = {
-      log: console.log,
-      warn: console.warn,
-      error: console.error,
-      info: console.info,
-    }
-
-    const createLog = (type: IConsoleLog['type'], args: unknown[]): IConsoleLog => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      message: args.map(arg => {
-        if (typeof arg === 'object') {
-          try {
-            return JSON.stringify(arg, null, 2)
-          } catch {
-            return String(arg)
-          }
-        }
-        return String(arg)
-      }).join(' '),
-      timestamp: new Date(),
-    })
-
-    // Override 
-    console.log = (...args) => {
-      setConsoleLogs(prev => [...prev, createLog('log', args)])
-      originalConsole.log.apply(console, args)
-    }
-    
-    console.warn = (...args) => {
-      setConsoleLogs(prev => [...prev, createLog('warn', args)])
-      originalConsole.warn.apply(console, args)
-    }
-    
-    console.error = (...args) => {
-      setConsoleLogs(prev => [...prev, createLog('error', args)])
-      originalConsole.error.apply(console, args)
-    }
-    
-    console.info = (...args) => {
-      setConsoleLogs(prev => [...prev, createLog('info', args)])
-      originalConsole.info.apply(console, args)
-    }
-
-  
-    const handleError = (event: ErrorEvent) => {
-      setConsoleLogs(prev => [...prev, createLog('error', [
-        `${event.message} at ${event.filename}:${event.lineno}:${event.colno}`
-      ])])
-    }
-    
-    window.addEventListener('error', handleError)
+  window.addEventListener('message', handleMessage)
+  return () => window.removeEventListener('message', handleMessage)
+}, [])
 
 
-    return () => {
-      console.log = originalConsole.log
-      console.warn = originalConsole.warn
-      console.error = originalConsole.error
-      console.info = originalConsole.info
-      window.removeEventListener('error', handleError)
-    }
-  }, [])
+
+
+
 
   const clearLogs = useCallback(() => {
     setNetworkRequests([])

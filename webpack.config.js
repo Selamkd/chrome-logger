@@ -17,14 +17,21 @@ module.exports = (env, argv) => {
     entry: {
       background: "./src/background/index.ts",
       content: "./src/content/index.ts",
+      injected: "./src/content/inject.js",
       popup: "./src/view/index.tsx",
     },
 
-    output: {
-      path: path.resolve(__dirname, "dist"),
-      filename: "[name]/index.js",
-      clean: true,
-    },
+  output: {
+  path: path.resolve(__dirname, "dist"),
+  filename: (pathData) => {
+    if (pathData.chunk.name === 'injected') {
+      return 'content/inject.js'  
+    }
+  
+    return '[name]/index.js'
+  },
+  clean: true,
+},
 
     module: {
       rules: [

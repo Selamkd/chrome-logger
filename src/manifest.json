@@ -12,15 +12,19 @@
     "service_worker": "background/index.js",
     "type": "module"
   },
+"content_scripts": [
+  {
+    "matches": ["<all_urls>"],
+    "js": ["content/index.js"],
+    "css": ["content/styles.css"],
+    "run_at": "document_end"
+  }
+],
+"web_accessible_resources": [{
+  "resources": ["content/inject.js"],
+  "matches": ["<all_urls>"]
+}],
 
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content/index.js"],
-      "css": ["content/styles.css"],
-       "run_at": "document_end"
-    }
-  ],
 
   "action": {
     "default_popup": "view/index.html",

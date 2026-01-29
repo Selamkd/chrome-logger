@@ -3,7 +3,13 @@ import ReactDOM from 'react-dom/client'
 import LoggerPanel from '../view/LoggerPanel'
 import './styles.css'
 
+console.log('Content script loaded!')
 
+const script = document.createElement('script')
+script.src = chrome.runtime.getURL('content/inject.js')
+script.onload = () => console.log('inject.js script tag loaded!')
+script.onerror = (e) => console.error('Failed to load inject.js:', e)
+;(document.head || document.documentElement).appendChild(script)
 if (!document.getElementById('chrome-logger-root')) {
 
   const container = document.createElement('div')
@@ -154,7 +160,7 @@ if (!document.getElementById('chrome-logger-root')) {
     
     .tab.active {
       color: #fff;
-      border-bottom-color: #007acc;
+      border-bottom-color: #BB633C;
     }
     
     .badge {
@@ -189,7 +195,7 @@ if (!document.getElementById('chrome-logger-root')) {
     
     .filter-input:focus {
       outline: none;
-      border-color: #007acc;
+      border-color: #BB633C;
     }
     
     .filter-buttons {
@@ -215,8 +221,8 @@ if (!document.getElementById('chrome-logger-root')) {
     }
     
     .filter-btn.active {
-      background: #007acc;
-      border-color: #007acc;
+      background: #BB633C;
+      border-color: #BB633C;
       color: #fff;
     }
     
