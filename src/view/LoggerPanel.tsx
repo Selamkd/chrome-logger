@@ -11,7 +11,7 @@ type ITab = 'network' | 'console'
 function LoggerPanel() {
   const [networkRequests, setNetworkRequests] = useState<INetworkRequest[]>([])
   const [consoleLogs, setConsoleLogs] = useState<IConsoleLog[]>([])
-  const [activeTab, setActiveTab] = useState<ITab>('network')
+  const [activeTab, setActiveTab] = useState<ITab>('console')
   const [isVisible, setIsVisible] = useState(true)
   const [collapsed, setCollapsed] = useState(false)
   const [textFilter, setTextFilter] = useState('')
@@ -155,6 +155,13 @@ function LoggerPanel() {
       </div>
 
       <div className="tabs">
+           <button 
+          className={`tab ${activeTab === 'console' ? 'active' : ''}`}
+          onClick={() => setActiveTab('console')}
+        >
+          Console
+          <span className="badge">{consoleLogs.length}</span>
+        </button>
         <button 
           className={`tab ${activeTab === 'network' ? 'active' : ''}`}
           onClick={() => setActiveTab('network')}
@@ -162,13 +169,7 @@ function LoggerPanel() {
           Network
           <span className="badge">{networkRequests.length}</span>
         </button>
-        <button 
-          className={`tab ${activeTab === 'console' ? 'active' : ''}`}
-          onClick={() => setActiveTab('console')}
-        >
-          Console
-          <span className="badge">{consoleLogs.length}</span>
-        </button>
+     
       </div>
 
       <div className="filters">

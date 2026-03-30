@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 export function App(): React.ReactElement {
   const [isEnabled, setIsEnabled] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<'network' | 'console'>('network');
+  const [activeTab, setActiveTab] = useState<'network' | 'console'>('console');
 
 
   useEffect(() => {
