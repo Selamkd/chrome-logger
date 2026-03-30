@@ -78,18 +78,19 @@ export function App(): React.ReactElement {
       </div>
 
       <div className="popup-tabs">
+          <button 
+          className={`popup-tab ${activeTab === 'console' ? 'active' : ''}`}
+          onClick={() => switchTab('console')}
+        >
+          Console
+        </button>
         <button 
           className={`popup-tab ${activeTab === 'network' ? 'active' : ''}`}
           onClick={() => switchTab('network')}
         >
           Network
         </button>
-        <button 
-          className={`popup-tab ${activeTab === 'console' ? 'active' : ''}`}
-          onClick={() => switchTab('console')}
-        >
-          Console
-        </button>
+      
       </div>
 
       <div className="popup-actions">
