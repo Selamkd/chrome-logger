@@ -1,6 +1,6 @@
 import { formatSize, formatTime, formatTimestamp, getConsolePrefix, getRowClass, getStatusClass, hasDetail, parseUrl } from '@/utils/logger.util'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { IEnhancedLog, INetExpanded, INode } from '../shared/const'
+import type { IEnhancedLog, INavigationEvent, INetExpanded, INode } from '../shared/const'
 import './loggerpanel-styles.css'
 
 const NETWORK_FILTERS = ['all', 'xhr', 'fetch', 'js', 'css', 'img', 'doc'] as const
@@ -19,8 +19,9 @@ function LoggerPanel() {
   const [filter, setFilter] = useState('')
   const [networkFilter, setNetworkFilter] = useState<INetworkFilter>('all')
   const [conFilter, setConFilter] = useState<IConsoleFilter>('all')
+ const [navigation, setNavigation] = useState<INavigationEvent[]>([]);
   const [autoScroll, setAutoScroll] = useState(true)
-  const [preserve, setPreserve] = useState(false)
+
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,12 +43,13 @@ function LoggerPanel() {
       if (msg.type === 'NETWORK_REQUEST' && msg.payload) setRequests(prev => [...prev, msg.payload])
       if (msg.type === 'TOGGLE_LOGGER') setVisible(msg.enabled ?? true)
       if (msg.type === 'SWITCH_TAB' && msg.tab) setTab(msg.tab)
-      if (msg.type === 'CLEAR_LOGS' && !preserve) { setRequests([]); setLogs([]) }
+      if (msg.type === 'NAVIGATION' && msg.payload) setNavigation(msg.payload)
+      if (msg.type === 'CLEAR_LOGS' ) { setRequests([]); setLogs([]); setNavigation([]) }
     }
     window.addEventListener('message', onWindowLoad)
     chrome.runtime.onMessage.addListener(onChrome)
     return () => { window.removeEventListener('message', onWindowLoad); chrome.runtime.onMessage.removeListener(onChrome) }
-  }, [preserve])
+  }, [])
 
 
 
@@ -61,6 +63,10 @@ function LoggerPanel() {
   const toggleLogDetails = useCallback((id: string) => {
     setLogs(prev => prev.map(log => log.id === id ? { ...log, _expanded: !log._expanded } : log))
   }, [])
+
+  function addNavigation(event: INavigationEvent) {
+  setNavigation(prev => [event, ...prev]);
+}
 
   const filteredRequests = requests.filter(request => {
     if (networkFilter !== 'all' && request.type !== networkFilter) return false
@@ -107,7 +113,7 @@ function LoggerPanel() {
         <div className="lp-toolbar">
           <span className="lp-toolbar-title">Logger</span>
           <button className={`lp-toolbar-btn ${autoScroll ? 'active' : ''}`} onClick={() => setAutoScroll(a => !a)} title="Auto-scroll">↓ scroll</button>
-          <button className={`lp-toolbar-btn ${preserve ? 'active' : ''}`} onClick={() => setPreserve(p => !p)} title="Preserve log">preserve</button>
+ 
           <div className="lp-toolbar-sep" />
           <button className="lp-toolbar-btn" onClick={clear}>clear</button>
         </div>

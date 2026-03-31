@@ -61,16 +61,16 @@ function initConsoleLogger(){
     if (val === null) return { t: 'null', v: 'null' }
     if (val === undefined) return { t: 'undef', v: 'undefined' }
 
-    var tp = typeof val
+    var type = typeof val
 
-    if (tp === 'string') {
+    if (type === 'string') {
       return { t: 'str', v: val.length > MAX_STR ? val.slice(0, MAX_STR) + '…' : val }
     }
-    if (tp === 'number')  return { t: 'num', v: String(val) }
-    if (tp === 'boolean') return { t: 'bool', v: String(val) }
-    if (tp === 'symbol')  return { t: 'sym', v: val.toString() }
-    if (tp === 'bigint')  return { t: 'num', v: val.toString() + 'n' }
-    if (tp === 'function') return { t: 'fn', v: 'f ' + (val.name || 'anonymous') + '()' }
+    if (type === 'number')  return { t: 'num', v: String(val) }
+    if (type === 'boolean') return { t: 'bool', v: String(val) }
+    if (type === 'symbol')  return { t: 'sym', v: val.toString() }
+    if (type === 'bigint')  return { t: 'num', v: val.toString() + 'n' }
+    if (type === 'function') return { t: 'fn', v: 'f ' + (val.name || 'anonymous') + '()' }
 
     if (val instanceof Error) {
       return { t: 'err', v: val.message, name: val.name, stack: val.stack || '' }
@@ -96,7 +96,7 @@ function initConsoleLogger(){
     }
 
   
-    if (tp === 'object') {
+    if (type === 'object') {
       if (depth >= MAX_DEPTH) return { t: 'obj', v: '{…}', x: true }
       var keys
       try { keys = Object.keys(val) } catch(e) { return { t: 'obj', v: '[Object]' } }
@@ -175,7 +175,7 @@ function initNavigationTracker(){
 
 function sendNavigation(type, url) {
     window.postMessage({
-      source: "chrome-logger",
+      source: "chrome-logger-extension",
       type: "NAVIGATION",
       payload: {
         url,

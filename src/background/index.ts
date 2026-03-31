@@ -2,6 +2,9 @@ import type { INetworkRequest } from "../shared/const";
 
 const requestsPerTab: Map<number, Map<string, Partial<INetworkRequest>>> = new Map()
 
+
+
+//--------- network requests --------//
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
@@ -129,6 +132,19 @@ chrome.webNavigation?.onBeforeNavigate?.addListener((details) => {
   }
 })
 
+
+//--------- navigation history --------//
+chrome.webNavigation.onCommitted.addListener((details) => {
+  if (details.frameId !== 0) return;
+  chrome.tabs.sendMessage(details.tabId, {
+    type: "NAVIGATION",
+    payload: {
+      url: details.url,
+      type: details.transitionType,
+      timestamp: Date.now()
+    }
+  });
+});
 
 chrome.runtime.onInstalled.addListener(async () => {
   const tabs = await chrome.tabs.query({})
