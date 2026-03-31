@@ -414,3 +414,134 @@
 .lp-stat-dot.yellow { background: var(--od-yellow); opacity: 0.7; }
 .lp-stat-dot.red    { background: var(--od-red); opacity: 0.7; }
 .lp-stat-dot.blue   { background: var(--od-blue); opacity: 0.7; }
+
+
+
+
+.lp-nav-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 70px;
+  padding: 0 10px;
+  height: 24px;
+  align-items: center;
+  background: var(--od-bg-darker);
+  border-bottom: 1px solid var(--od-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.lp-nav-header span {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--od-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.lp-nav-header span:last-child {
+  text-align: right;
+}
+
+
+
+.lp-nav-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 70px;
+  padding: 0 10px;
+  min-height: 26px;
+  align-items: center;
+  border-bottom: 1px solid var(--od-border);
+  cursor: pointer;
+  transition: background 80ms ease;
+}
+
+.lp-nav-row:hover {
+  background: var(--od-bg-hover);
+}
+
+
+
+.lp-nav-type {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.lp-nav-load        { color: var(--od-blue); }
+.lp-nav-pushState   { color: var(--od-green); }
+.lp-nav-replaceState{ color: var(--od-yellow); }
+.lp-nav-popstate    { color: var(--od-purple); }
+
+
+
+.lp-nav-url {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--od-text);
+  padding-right: 8px;
+}
+
+.lp-nav-url-path {
+  color: var(--od-text-bright);
+}
+
+.lp-nav-url-host {
+  color: var(--od-text-muted);
+  margin-right: 6px;
+}
+
+
+.lp-nav-time {
+  text-align: right;
+  font-size: 10px;
+  color: var(--od-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+
+
+.lp-nav-detail {
+  background: var(--od-bg-darkest);
+  border-bottom: 1px solid var(--od-border);
+  padding: 8px 12px;
+  font-size: 10.5px;
+}
+
+.lp-nav-detail-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.lp-nav-detail-label {
+  color: var(--od-text-muted);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 70px;
+}
+
+.lp-nav-detail-value {
+  color: var(--od-text);
+  word-break: break-all;
+}
+
+
+
+.lp-nav-duration {
+  margin-left: 6px;
+  font-size: 9px;
+  color: var(--od-text-muted);
+}
+
+.lp-nav-duration.slow {
+  color: var(--od-yellow);
+}
+
+.lp-nav-duration.fast {
+  color: var(--od-green);
+}

@@ -8,7 +8,7 @@ const CONSOLE_FILTERS = ['all', 'log', 'warn', 'error', 'info'] as const
 
 type INetworkFilter = typeof NETWORK_FILTERS[number]
 type IConsoleFilter = typeof CONSOLE_FILTERS[number]
-type ITab = 'network' | 'console'
+type ITab = 'network' | 'console' | 'nav'
 
 function LoggerPanel() {
   const [requests, setRequests] = useState<INetExpanded[]>([])
@@ -19,7 +19,7 @@ function LoggerPanel() {
   const [filter, setFilter] = useState('')
   const [networkFilter, setNetworkFilter] = useState<INetworkFilter>('all')
   const [conFilter, setConFilter] = useState<IConsoleFilter>('all')
- const [navigation, setNavigation] = useState<INavigationEvent[]>([]);
+ const [navigationEvent, setNavigation] = useState<INavigationEvent[]>([]);
   const [autoScroll, setAutoScroll] = useState(true)
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -40,6 +40,7 @@ function LoggerPanel() {
       }
     }
     const onChrome = (msg: any) => {
+
       if (msg.type === 'NETWORK_REQUEST' && msg.payload) setRequests(prev => [...prev, msg.payload])
       if (msg.type === 'TOGGLE_LOGGER') setVisible(msg.enabled ?? true)
       if (msg.type === 'SWITCH_TAB' && msg.tab) setTab(msg.tab)
@@ -64,6 +65,14 @@ function LoggerPanel() {
     setLogs(prev => prev.map(log => log.id === id ? { ...log, _expanded: !log._expanded } : log))
   }, [])
 
+
+const toggleNavExpanded = (id: string) => {
+  setNavigation((prev) =>
+    prev.map((navigate) =>
+      navigate.id === id ? { ...navigate, _expanded: !navigate._expanded } : navigate
+    )
+  )
+}
   function addNavigation(event: INavigationEvent) {
   setNavigation(prev => [event, ...prev]);
 }
@@ -125,6 +134,13 @@ function LoggerPanel() {
           <button className={`lp-tab ${tab === 'network' ? 'active' : ''}`} onClick={() => setTab('network')}>
             Network <span className={`lp-badge ${failedRequestsCount > 0 ? 'has-errors' : ''}`}>{requests.length}</span>
           </button>
+          <button
+  className={`lp-tab ${tab === 'nav' ? 'active' : ''}`}
+  onClick={() => setTab('nav')}
+>
+  NAV
+  <span className="lp-badge">{navigationEvent.length}</span>
+</button>
         </div>
 
 
@@ -267,7 +283,11 @@ function LoggerPanel() {
             </>
           )}
         </div>
-
+{tab === 'nav' ? (
+  <NavigationList items={navigationEvent} setItems={setNavigation}/>
+):(
+  null 
+)}
        
         <div className="lp-statusbar">
           {errorLogsCount > 0 && <div className="lp-stat"><div className="lp-stat-dot red" />{errorLogsCount} error{errorLogsCount !== 1 ? 's' : ''}</div>}
@@ -339,5 +359,83 @@ function fmtVal(n: INode): string {
   return n.preview
 }
 
+
+
+
+function NavigationList({ items, setItems }: {
+  items: INavigationEvent[];
+  setItems: (fn: (prev: INavigationEvent[]) => INavigationEvent[]) => void;
+}) {
+
+  const toggle = (id: string) => {
+    setItems(prev =>
+      prev.map(i =>
+        i.id === id ? { ...i, _expanded: !i._expanded } : i
+      )
+    );
+  };
+
+
+
+
+  return (
+    <>
+      <div className="lp-nav-header">
+        <span>Type</span>
+        <span>URL</span>
+        <span>Time</span>
+      </div>
+
+      {items.map((item, i) => {
+        const { host, path } = parseUrl(item.url);
+
+        return (
+          <div key={item.id}>
+            <div
+              className="lp-nav-row"
+              onClick={() => toggle(item.id)}
+            >
+              <div className={`lp-nav-type lp-nav-${item.type}`}>
+                {item.type}
+              </div>
+
+              <div className="lp-nav-url">
+                <span className="lp-nav-url-host">{host}</span>
+                <span className="lp-nav-url-path">{path}</span>
+              </div>
+
+              <div className="lp-nav-time">
+                {formatTime(parseInt(item.timestamp))}
+              </div>
+            </div>
+
+            {item._expanded && (
+              <div className="lp-nav-detail">
+                <div className="lp-nav-detail-row">
+                  <span className="lp-nav-detail-label">Full URL</span>
+                  <span className="lp-nav-detail-value">{item.url}</span>
+                </div>
+
+                <div className="lp-nav-detail-row">
+                  <span className="lp-nav-detail-label">Type</span>
+                  <span className="lp-nav-detail-value">{item.type}</span>
+                </div>
+
+                <div className="lp-nav-detail-row">
+                  <span className="lp-nav-detail-label">Timestamp</span>
+                  <span className="lp-nav-detail-value">
+                    {new Date(item.timestamp).toString()}
+                  </span>
+                </div>
+
+               
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
 
 export default LoggerPanel

@@ -83,9 +83,11 @@ export interface IConsoleLog {
 }
 
 export interface INavigationEvent{
+  id:string
     url:string
     type: string
     timestamp: string 
+    _expanded?: boolean
   }
 
 export type IMessageType = 
