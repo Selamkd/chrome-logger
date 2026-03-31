@@ -1,41 +1,43 @@
 {
   "manifest_version": 3,
   "name": "Chrome Logger",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "View console logs and network requests in a sidebar panel",
-
-  "permissions": ["storage", "activeTab", "webRequest"],
- "host_permissions": [
+  "permissions": [
+    "storage",
+    "activeTab",
+    "webRequest",
+    "webNavigation"
+  ],
+  "host_permissions": [
     "<all_urls>"
   ],
   "background": {
     "service_worker": "background/index.js",
     "type": "module"
   },
-"content_scripts": [
-  {
-    "matches": ["<all_urls>"],
-    "js": ["content/index.js"],
-    "css": ["content/styles.css"],
-    "run_at": "document_end"
-  }
-],
-"web_accessible_resources": [{
-  "resources": ["content/inject.js"],
-  "matches": ["<all_urls>"]
-}],
-
-
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/index.js"],
+      "css": ["content/styles.css"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [{
+    "resources": ["content/inject.js"],
+    "matches": ["<all_urls>"]
+  }],
   "action": {
     "default_popup": "view/index.html",
-    "default_title": "Chrome Extension Template",
+    "default_title": "Chrome Logger",
     "default_icon": {
       "16": "assets/icon-16.png",
       "48": "assets/icon-48.png",
       "128": "assets/icon-128.png"
     }
   },
-
   "icons": {
     "16": "assets/icon-16.png",
     "48": "assets/icon-48.png",
