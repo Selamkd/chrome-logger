@@ -1,4 +1,4 @@
-import { IConsoleLog, INetworkRequest } from "@/shared/const"
+import { IConsoleLog, IEnhancedLog, INetworkRequest } from "@/shared/const"
 
 export function formatTime (ms: number): string {
     if (ms < 1000) return `${Math.round(ms)}ms`
@@ -57,4 +57,14 @@ export function formatTime (ms: number): string {
     if (bytes < 1024) return `${bytes}B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}K`
     return `${(bytes / (1024 * 1024)).toFixed(1)}M`
+  }
+
+ 
+ 
+ 
+ 
+  export function hasDetail (log: IEnhancedLog) {
+    if (log.caller) return true
+    if (log.args?.some(a => a.type === 'obj' || a.type === 'arr' || a.type === 'err')) return true
+    return false
   }

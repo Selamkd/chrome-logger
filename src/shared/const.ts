@@ -88,3 +88,35 @@ export type IMessageType =
    { type: 'NETWORK_REQUEST'; payload: INetworkRequest }
   | { type: 'CONSOLE_LOG'; payload: IConsoleLog }
   | { type: 'CLEAR_LOGS' }
+
+
+
+  export interface INode {
+    type: string    
+    preview: string    
+    errorName?: string 
+    stack?: string
+    objEntries?: { k: string; v: INode }[] 
+    children?: INode[]   
+    truncated?: boolean  
+  }
+  
+  export interface ICaller {
+    fn: string
+    file: string
+    fileFull: string
+    line: number
+    col: number
+  }
+  
+  export interface IEnhancedLog extends IConsoleLog {
+    args?: INode[]
+    caller?: ICaller | null
+    _expanded?: boolean
+  }
+  
+  export interface INetExpanded extends INetworkRequest {
+    _expanded?: boolean
+  }
+  
+  
