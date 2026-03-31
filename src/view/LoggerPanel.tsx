@@ -1,5 +1,5 @@
 import { formatSize, formatTime, formatTimestamp, getConsolePrefix, getRowClass, getStatusClass, hasDetail, parseUrl } from '@/utils/logger.util'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { IEnhancedLog, INetExpanded, INode } from '../shared/const'
 import './loggerpanel-styles.css'
 
@@ -50,11 +50,7 @@ function LoggerPanel() {
   }, [preserve])
 
 
-  
 
-  useEffect(() => {
-    if (autoScroll && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [logs, requests, autoScroll])
 
   const clear = useCallback(() => { setRequests([]); setLogs([]) }, [])
 
@@ -81,6 +77,17 @@ function LoggerPanel() {
   const warnLogsCount = logs.filter(l => l.type === 'warn').length
   const failedRequestsCount = requests.filter(r => r.status && r.status >= 400).length
 
+ const itemIsExpanded = useMemo(() => {
+  const items = [...filteredRequests, ...filteredLogs];
+
+  return items.some((item) => item._expanded === true);
+}, [filteredRequests, filteredLogs]);
+
+
+
+  useEffect(() => {
+    if (autoScroll && scrollRef.current && !itemIsExpanded) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+  }, [logs, requests, autoScroll])
 
 
   if (!visible) return null
