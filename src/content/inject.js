@@ -1,4 +1,11 @@
-(function() {
+
+(function () {
+  initConsoleLogger();
+  initNavigationTracker();
+})();
+
+
+function initConsoleLogger(){
   var originalConsole = {
     log: console.log.bind(console),
     warn: console.warn.bind(console),
@@ -6,8 +13,7 @@
     info: console.info.bind(console),
   }
 
-
-  function getCallerInfo() {
+    function getCallerInfo() {
     var err = new Error()
     var stack = err.stack || ''
     var lines = stack.split('\n')
@@ -44,7 +50,6 @@
     }
     return null
   }
-
 
   function getTreeNodeFromValue(val, depth) {
     if (depth === undefined) depth = 0
@@ -142,7 +147,7 @@
 
 
 
-  
+
 
   console.log = function() {
     var a = Array.prototype.slice.call(arguments)
@@ -160,4 +165,51 @@
     var a = Array.prototype.slice.call(arguments)
     sendLog('info', a); originalConsole.info.apply(console, a)
   }
-})()
+
+  
+}
+
+
+
+function initNavigationTracker(){
+
+function sendNavigation(type, url) {
+    window.postMessage({
+      source: "chrome-logger",
+      type: "NAVIGATION",
+      payload: {
+        url,
+        type,
+        timestamp: Date.now()
+      }
+    }, "*");
+  }
+ const originalPush = history.pushState;
+  history.pushState = function (...args) {
+    const result = originalPush.apply(this, args);
+    // when a route gets added to the top of stack(on redirect)
+    sendNavigation("pushState", location.href);
+    return result;
+  };
+
+
+  const originalReplace = history.replaceState;
+  history.replaceState = function (...args) {
+    const result = originalReplace.apply(this, args);
+   // when the current route gets replaced 
+    sendNavigation("replaceState", location.href);
+    return result;
+  };
+// when the active history changes while the user navigates 
+  window.addEventListener("popstate", () => {
+    sendNavigation("popstate", location.href);
+  });
+
+
+  sendNavigation("load", location.href);
+
+
+}
+
+
+

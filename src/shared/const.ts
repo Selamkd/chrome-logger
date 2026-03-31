@@ -82,11 +82,17 @@ export interface IConsoleLog {
   stack?: string
 }
 
+export interface INavigationEvent{
+    url:string
+    type: string
+    timestamp: string 
+  }
 
 export type IMessageType = 
  "PING" | "GET_TAB_INFO" | "CONTENT_LOADED" |
    { type: 'NETWORK_REQUEST'; payload: INetworkRequest }
   | { type: 'CONSOLE_LOG'; payload: IConsoleLog }
+    | { type: 'NAVIGATION'; payload: INavigationEvent }
   | { type: 'CLEAR_LOGS' }
 
 
@@ -118,5 +124,4 @@ export type IMessageType =
   export interface INetExpanded extends INetworkRequest {
     _expanded?: boolean
   }
-  
   
