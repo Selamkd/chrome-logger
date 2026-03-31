@@ -1,10 +1,5 @@
-import type {
+import type { INetworkRequest } from "../shared/const";
 
-  INetworkRequest,
-
-} from "../shared/const";
-
-// track requests per tab
 const requestsPerTab: Map<number, Map<string, Partial<INetworkRequest>>> = new Map()
 
 function generateId(): string {
@@ -14,28 +9,17 @@ function generateId(): string {
 function getResourceType(url: string, type?: string): string {
   if (type === 'xmlhttprequest') return 'xhr'
   if (type === 'fetch') return 'fetch'
-  
+
   const ext = url.split('?')[0].split('.').pop()?.toLowerCase()
   const typeMap: Record<string, string> = {
-    'js': 'js',
-    'css': 'css',
-    'png': 'img',
-    'jpg': 'img',
-    'jpeg': 'img',
-    'gif': 'img',
-    'svg': 'img',
-    'webp': 'img',
-    'html': 'doc',
-    'htm': 'doc',
+    'js': 'js', 'css': 'css',
+    'png': 'img', 'jpg': 'img', 'jpeg': 'img', 'gif': 'img', 'svg': 'img', 'webp': 'img',
+    'html': 'doc', 'htm': 'doc',
     'json': 'json',
-    'woff': 'font',
-    'woff2': 'font',
-    'ttf': 'font',
+    'woff': 'font', 'woff2': 'font', 'ttf': 'font',
   }
-  
   return typeMap[ext || ''] || type || 'other'
 }
-
 
 function initTab(tabId: number): Map<string, Partial<INetworkRequest>> {
   if (!requestsPerTab.has(tabId)) {
@@ -44,14 +28,13 @@ function initTab(tabId: number): Map<string, Partial<INetworkRequest>> {
   return requestsPerTab.get(tabId)!
 }
 
+
+
 chrome.webRequest.onBeforeRequest.addListener(
   (details) => {
-   
     if (details.tabId < 0) return
-    
     const tabRequests = initTab(details.tabId)
     const id = generateId()
-    
 
     tabRequests.set(details.requestId, {
       id,
@@ -68,27 +51,19 @@ chrome.webRequest.onBeforeRequest.addListener(
   { urls: ['<all_urls>'] }
 )
 
-
-
 chrome.webRequest.onHeadersReceived.addListener(
   (details) => {
     if (details.tabId < 0) return
-    
     const tabRequests = requestsPerTab.get(details.tabId)
     const request = tabRequests?.get(details.requestId)
-    
     if (request) {
       request.status = details.statusCode
       request.statusText = details.statusLine || ''
-      
-    
       if (details.responseHeaders) {
         request.responseHeaders = {}
         details.responseHeaders.forEach(header => {
           request.responseHeaders![header.name.toLowerCase()] = header.value || ''
         })
-        
-      
         const contentLength = details.responseHeaders.find(
           h => h.name.toLowerCase() === 'content-length'
         )
@@ -99,29 +74,23 @@ chrome.webRequest.onHeadersReceived.addListener(
     }
   },
   { urls: ['<all_urls>'] },
-  ['responseHeaders'] 
+  ['responseHeaders']
 )
 
 chrome.webRequest.onCompleted.addListener(
   (details) => {
     if (details.tabId < 0) return
-    
     const tabRequests = requestsPerTab.get(details.tabId)
     const request = tabRequests?.get(details.requestId)
-    
+
     if (request && request.timestamp) {
-   
       request.time = Date.now() - request.timestamp.getTime()
-      
-    
       chrome.tabs.sendMessage(details.tabId, {
         type: 'NETWORK_REQUEST',
         payload: { ...request } as INetworkRequest
       }).catch(() => {
-     
+ 
       })
-      
-  
       tabRequests?.delete(details.requestId)
     }
   },
@@ -131,20 +100,18 @@ chrome.webRequest.onCompleted.addListener(
 chrome.webRequest.onErrorOccurred.addListener(
   (details) => {
     if (details.tabId < 0) return
-    
     const tabRequests = requestsPerTab.get(details.tabId)
     const request = tabRequests?.get(details.requestId)
-    
+
     if (request && request.timestamp) {
       request.time = Date.now() - request.timestamp.getTime()
-      request.status = 0 
+      request.status = 0
       request.statusText = details.error
-      
+
       chrome.tabs.sendMessage(details.tabId, {
         type: 'NETWORK_REQUEST',
         payload: { ...request } as INetworkRequest
       }).catch(() => {})
-      
       tabRequests?.delete(details.requestId)
     }
   },
@@ -152,15 +119,39 @@ chrome.webRequest.onErrorOccurred.addListener(
 )
 
 
-
 chrome.tabs.onRemoved.addListener((tabId) => {
   requestsPerTab.delete(tabId)
 })
 
-
 chrome.webNavigation?.onBeforeNavigate?.addListener((details) => {
   if (details.frameId === 0) {
     requestsPerTab.delete(details.tabId)
+  }
+})
+
+
+chrome.runtime.onInstalled.addListener(async () => {
+  const tabs = await chrome.tabs.query({})
+  for (const tab of tabs) {
+    if (!tab.id || !tab.url) continue
+
+    if (tab.url.startsWith('chrome://') ||
+        tab.url.startsWith('chrome-extension://') ||
+        tab.url.startsWith('about:') ||
+        tab.url.startsWith('edge://')) continue
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/index.js']
+      })
+      await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ['content/styles.css']
+      })
+    } catch {
+
+    }
   }
 })
 

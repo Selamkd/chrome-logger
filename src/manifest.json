@@ -7,7 +7,8 @@
     "storage",
     "activeTab",
     "webRequest",
-    "webNavigation"
+    "webNavigation",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
