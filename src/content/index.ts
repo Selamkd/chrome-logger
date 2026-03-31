@@ -28,10 +28,6 @@ if (!document.getElementById('chrome-logger-root')) {
     overflow: visible !important;
     z-index: 2147483647 !important;
     pointer-events: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    background: transparent !important;
   `
 
 
@@ -48,11 +44,11 @@ if (!document.getElementById('chrome-logger-root')) {
         )
       )
     } else {
-    
+  
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', mount, { once: true })
       } else {
-    
+
         requestAnimationFrame(mount)
       }
     }
