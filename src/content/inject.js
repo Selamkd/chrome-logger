@@ -8,6 +8,7 @@
   }
 
   const sendLog = (type, args) => {
+ 
     window.postMessage({
       source: 'chrome-logger-extension',
       type: 'CONSOLE_LOG',
