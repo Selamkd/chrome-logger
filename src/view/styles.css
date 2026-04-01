@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thumb-od-bg-active::-webkit-scrollbar-thumb {
+  background: #44413d;
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-od-bg-active:hover::-webkit-scrollbar-thumb {
+  background: #3b3936;
+}
+
+
+.font-variant-numeric-tabular {
+  font-variant-numeric: tabular-nums;
+}

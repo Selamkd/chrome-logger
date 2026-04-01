@@ -1,3 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 #chrome-logger-root {
   all: initial !important;
   position: fixed !important;
