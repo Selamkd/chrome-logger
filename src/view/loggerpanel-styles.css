@@ -220,7 +220,7 @@
 .lp-detail-section:last-child { margin-bottom: 0; }
 .lp-detail-label { font-size: 9.5px; font-weight: 600; color: var(--od-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 .lp-detail-url { color: var(--od-cyan); word-break: break-all; line-height: 1.5; }
-.lp-detail-kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+.lp-detail-kv { display: grid; gap: 4px 6px; }
 .lp-detail-key { color: var(--od-purple); }
 .lp-detail-val { color: var(--od-text); word-break: break-all; }
 
